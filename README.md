@@ -1,40 +1,88 @@
-*Concepts you may want to Google beforehand: IRQs, PIC, polling*
+# ToyOS Homework
 
-**Goal: Finish the interrupts implementation and CPU timer**
+ToyOS Homework is a very small teaching operating system.  
+It is based on lesson 19 of os-tutorial.  
+The computer boots into a 32-bit kernel.  
+Then it shows a text menu on the screen.  
+The user can press one key to run a command: List / Move / Rename / Clear screen / Show status.
 
-When the CPU boots, the PIC maps IRQs 0-7 to INT 0x8-0xF
-and IRQs 8-15 to INT 0x70-0x77. This conflicts with the ISRs
-we programmed last lesson. Since we programmed ISRs 0-31, 
-it is standard to remap the IRQs to ISRs 32-47.
+## Main Menu
 
-The PICs are communicated with via I/O ports (see lesson 15).
-The Master PIC has command 0x20 and data 0x21, while the slave has
-command 0xA0 and data 0xA1.
+![Main Menu](screenshots/01-main-menu.png)
 
-The code for remapping the PICs is weird and includes
-some masks, so check 
-[this article](http://www.osdev.org/wiki/PIC) if you're curious.
-Otherwise, just look at `cpu/isr.c`, new code after we set the IDT
-gates for the ISRs. After that, we add the IDT gates for IRQs.
+**Figure 1** - ToyOS main menu after boot.
 
-Now we jump to assembler, at `interrupt.asm`. The first task is to
-add global definitions for the IRQ symbols we just used in the C code. 
-Look at the end of the `global` statements.
+## Implemented Functions
 
-Then, add the IRQ handlers. Same `interrupt.asm`, at the bottom. Notice
-how they jump to a new common stub: `irq_common_stub` (next step)
+### `cmd_list()`
 
-We then create this `irq_common_stub` which is very similar to the ISR one.
-It is located at the top of `interrupt.asm`, and it also defines
-a new `[extern irq_handler]`
+- This function shows a fake file list.
+- It prints file names, for example: `KERNEL.BIN`, `CONFIG.TXT`, `README.TXT`.
 
-Now back to C code, to write the `irq_handler()` in `isr.c`. It sends some
-EOIs to the PICs and calls the appropriate handler, which is stored in an array
-named `interrupt_handlers` and defined at the top of the file. The new structs
-are defined in `isr.h`. We will also use a simple function to register 
-the interrupt handlers.
+![cmd_list](screenshots/02-cmd-list.png)
 
-That was a lot of work, but now we can define our first IRQ handler!
+**Figure 2** - Result of command 1: `cmd_list()`.
 
-There are no changes in `kernel.c`, so there is nothing new to run and see.
-Please move on to the next lesson to check those shiny new IRQs.
+### `cmd_move()`
+
+- This function simulates moving a file.
+- It prints a message that we move `FILE1.TXT` from `/home` to `/backup`.
+- It is only text output. There is no real file system.
+
+![cmd_move](screenshots/03-cmd-move.png)
+
+**Figure 3** - Result of command 2: `cmd_move()`.
+
+### `cmd_rename()`
+
+- This function simulates renaming a file.
+- It prints a message that we rename `CONFIG.TXT` to `CONFIG.BAK`.
+
+![cmd_rename](screenshots/04-cmd-rename.png)
+
+**Figure 4** - Result of command 3: `cmd_rename()`.
+
+### `cmd_clear()`
+
+- This function clears the screen.
+- It calls `clear_screen()`, then prints the ToyOS title again.
+- The screen looks like it is refreshed.
+
+![cmd_clear](screenshots/05-cmd-clear.png)
+
+**Figure 5** - Screen after command 4: `cmd_clear()`.
+
+### `cmd_status()`
+
+- This function shows a simple system status:
+  - ToyOS Homework Edition, based on lesson `19-interrupts-irqs`
+  - Interrupt system (ISR/IRQ) is enabled
+  - Output uses our own text-mode screen driver
+  - Real file system and memory management are not implemented yet
+
+![cmd_status](screenshots/06-cmd-status.png)
+
+**Figure 6** - Result of command 5: `cmd_status()`.
+
+### `toyos_shell()`
+
+- This is the main loop of the OS.
+- It prints the title and the menu.
+- It reads one key from the keyboard.
+- It uses a `switch` to call the correct `cmd_*` function.
+
+### `print_menu()`
+
+- This function prints the main menu on the screen.
+- The menu includes options `1`-`5` and `q` for quit.
+
+## Quit Screen
+
+![Quit](screenshots/07-quit.png)
+
+**Figure 7** - Quit option: ToyOS halted screen.
+
+## Total Lines of Code
+
+Total lines of C code (kernel + basic drivers + CPU setup): about **523 lines**.  
+This number includes comments and blank lines.
